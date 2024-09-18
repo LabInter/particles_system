@@ -1,6 +1,9 @@
-import pygame
+from OpenGL.GL import *
+from OpenGL.GLUT import *
+from OpenGL.GLU import *
+from PIL import Image, ImageDraw, ImageFont
 import random
-import string
+import numpy as np
 
 class TextAnimation:
 
@@ -56,14 +59,14 @@ class TextAnimation:
         lines = self.split_phrase(phrase, max_width, self.letter_size_px)
         self.calculate_final_positions(lines, text_position[0], text_position[1], self.letter_size_px, self.line_height_px)
 
-        # Verifica se a posição está vazia e se o caractere é válido antes de criar o GrowingLetter
+        # Cria GrowingLetter para cada letra
         self.letters = [GrowingLetter(letter, pos, self.initial_font_size, self.final_font_size, self.growth_duration, self.screen_width, self.screen_height) 
                         for letter, pos in self.positions if letter.strip()]
 
-    def draw_and_update(self, screen):
+    def draw_and_update(self):
         for letter in self.letters:
             letter.update(self.animation_velocity)
-            screen.blit(letter.image, letter.rect)
+            letter.draw()
 
 class GrowingLetter:
     def __init__(self, letter, final_position, initial_font_size, final_font_size, growth_duration, screen_width, screen_height):
@@ -74,47 +77,58 @@ class GrowingLetter:
         self.initial_font_size = initial_font_size
         self.final_font_size = final_font_size
         self.font_size = initial_font_size
-        self.font = pygame.font.SysFont('arial', self.font_size)
-        self.image = self.font.render(self.letter, True, (255, 255, 255))
-        self.rect = self.image.get_rect(center=(self.x, self.y))
         self.growth_counter = 0
         self.growth_duration = growth_duration
 
+        # Criando a imagem de texto com Pillow
+        self.font = ImageFont.load_default()
+        self.image, self.image_data = self.create_letter_image(self.letter, self.font)
+        self.texture_id = self.create_texture(self.image_data, self.image.size)
+
+    def create_letter_image(self, letter, font):
+        """Cria a imagem da letra com o Pillow"""
+        img = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(img)
+        draw.text((0, 0), letter, font=font, fill=(255, 255, 255, 255))
+
+        img_data = np.array(list(img.getdata()), np.uint8)
+        return img, img_data
+
+    def create_texture(self, image_data, size):
+        """Cria uma textura OpenGL a partir de dados de imagem"""
+        texture_id = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, texture_id)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size[0], size[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data)
+        glBindTexture(GL_TEXTURE_2D, 0)
+        return texture_id
+
     def update(self, move_factor):
+        """Atualiza a posição e tamanho da letra"""
         if self.growth_counter < self.growth_duration:
             self.font_size = self.initial_font_size + (self.final_font_size - self.initial_font_size) * (self.growth_counter / self.growth_duration)
-            self.font = pygame.font.SysFont('arial', int(self.font_size))
-            self.image = self.font.render(self.letter, True, (255, 255, 255))
-            self.rect = self.image.get_rect(center=(self.x, self.y))
+            self.font = ImageFont.truetype("arial.ttf", int(self.font_size))
+            self.image, self.image_data = self.create_letter_image(self.letter, self.font)
+            self.texture_id = self.create_texture(self.image_data, self.image.size)
             self.growth_counter += 1
 
         self.x = self.x + (self.final_x - self.x) * move_factor
         self.y = self.y + (self.final_y - self.y) * move_factor
-        self.rect = self.image.get_rect(center=(self.x, self.y))
 
+    def draw(self):
+        """Desenha a letra usando OpenGL"""
+        glEnable(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, self.texture_id)
 
-# # Inicialização do Pygame e da animação
-# pygame.init()
-# screen_width = 800
-# screen_height = 600
-# screen = pygame.display.set_mode((screen_width, screen_height))
-# pygame.display.set_caption("Text Animation")
-# clock = pygame.time.Clock()
+        glBegin(GL_QUADS)
+        glTexCoord2f(0, 0); glVertex2f(self.x, self.y)
+        glTexCoord2f(1, 0); glVertex2f(self.x + 64, self.y)
+        glTexCoord2f(1, 1); glVertex2f(self.x + 64, self.y + 64)
+        glTexCoord2f(0, 1); glVertex2f(self.x, self.y + 64)
+        glEnd()
 
-# phrase = "Are some technical objects just in the background, while the closer one gets to an epistemic situation, the more attention needs to be paid to the technical objects that are implied"
-# text_position = (screen_width // 2, screen_height // 2)
-# animation = TextAnimation(phrase, screen_width, screen_height, text_position)
-
-# # Loop principal
-# running = True
-# while running:
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             running = False
-    
-#     screen.fill((0, 0, 0))
-#     animation.draw_and_update(screen)
-#     pygame.display.flip()
-#     clock.tick(30)
-
-# pygame.quit()
+        glBindTexture(GL_TEXTURE_2D, 0)
+        glDisable(GL_TEXTURE_2D)
