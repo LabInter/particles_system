@@ -1,19 +1,21 @@
-import pygame
-from Particle import Particle
-import random 
-from sys import exit
 import os
-from double_slit import *
 import math
-from pygame.math import Vector2
-from particles_manager import *
+import random
+from sys import exit
+
+import pygame
+import noise
 from PIL import Image
+from pygame.math import Vector2
+
+from Particle import Particle
+from double_slit import *
+from particles_manager import *
 from osc_client import *
 from floating_letters import *
 from phrases import *
 from wave_movement import *
 from face_detection import *
-import noise
 
 class ImageTest:
     def __init__(self, path, width, height):
