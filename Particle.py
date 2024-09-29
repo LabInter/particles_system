@@ -4,6 +4,13 @@ import pygame
 import random
 
 class Particle:
+
+    __slots__ = [
+        'pos', 'angle', 'r', 'wave_speed', 'collision_status', 'original_pos', 'dir', 'speed', 'radius', 'use_image', 'alive', 'collidable',
+        'image', 'color', 'collisions_count',
+        'noise_offset_x', 'noise_offset_y', 'direction_x', 'direction_y', 'center_x', 'center_y'
+    ]
+
     def __init__(self, position, direction, speed, radius, color_or_image, use_image=False, collidable=True):
         self.pos = Vector2(position)
         self.original_pos = Vector2(position)
