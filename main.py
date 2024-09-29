@@ -88,6 +88,9 @@ class ParticleSimulation:
     def choise_final_image(self):
         self.image_test = random.choice(self.images_test_list)
 
+    def config_text_animation(self, screen_width, screen_height, text_pos):
+        self.text_animation = TextAnimation(phrases[random.randint(0, len(phrases)-1)], screen_width, screen_height, text_pos)
+
     def init_variables(self):
         self.face_detector.init_variables()
         self.init_text_variables()
@@ -312,6 +315,22 @@ class ParticleSimulation:
             self.move_particle_status = True
             self.use_collision = False
 
+    def should_create_generated_particles_from_collision(self, result):
+        return result != None and not self.move_particle_status
+
+    def handle_particle_collisions(self, particle):
+        self.particles_manager.add_particle_to_grid(particle)
+        i, j = self.particles_manager.get_particle_position_on_grid(particle)
+        result = particle.guidance(self.box, self.particles_manager.grid[i][j], self.use_collision if self.face_detector.face_detected else False)
+        if self.should_create_generated_particles_from_collision(result):
+            self.create_generated_particles(result)
+
+    def update_particle_position(self, particle):
+        if self.wave_movement:
+            update_wave_movement(self.timer, particle)
+        else:
+            particle.update_pos()
+
     def draw_particles(self):
 
         if self.restart_status:
@@ -327,18 +346,9 @@ class ParticleSimulation:
         self.draw_generated_particles(self.index_next_to_alive)
 
         for particle in self.particles:
-            if self.wave_movement:
-                update_wave_movement(self.timer, particle)
-            else:
-                particle.update_pos()
-
+            self.update_particle_position(particle)
             self.draw_particle(particle)
-
-            self.particles_manager.add_particle_to_grid(particle)
-            i, j = self.particles_manager.get_particle_position_on_grid(particle)
-            result = particle.guidance(self.box, self.particles_manager.grid[i][j], self.use_collision if self.face_detector.face_detected else False)
-            if result != None and not self.move_particle_status:
-                self.create_generated_particles(result)
+            self.handle_particle_collisions(particle)
         
         self.timer += self.clock.get_time()
         if self.use_collision and self.face_detector.face_detected:
@@ -346,7 +356,7 @@ class ParticleSimulation:
 
         if self.time_transition_to_final_image_counter > self.time_transition_to_final_image: # esse trecho limita a geração de partículas a um tempo "time_transition_to_final_image". se passar disso, cria todas as partículas que faltam 
             qt = (int) ((len(self.particles_from_collision) - self.index_next_to_alive) // 2)
-            for i in range(qt):
+            for _ in range(qt):
                 particle = random.choice(self.particles)
                 x = particle.pos.x
                 y = particle.pos.y
@@ -375,26 +385,40 @@ class ParticleSimulation:
             else:
                 self.add_particle(pos, dir, speed, radius, (255, 255, 255), use_image=False)
 
+    def handle_face_detection(self):
+        self.face_detector.face_detected = self.face_detector.process_face_detection()
+        if self.face_detector.face_detected:
+            self.set_particles_speed(self.particles_speed)
+        else:
+            self.set_particles_speed(0)
+
+    def should_create_particle(self):
+        return len(self.particles) < self.number_of_particles
+    
+    def handle_keyboard_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.running = False
+
+    def finish_simulation(self):
+        pygame.quit()
+        self.face_detector.cap.release()
+        exit()
+
     def render(self):
         while self.running:
-            dt = self.clock.tick(60) / 1000
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.running = False
+
+            self.handle_keyboard_events()
 
             self.screen.blit(self.bg, (0, 0))
 
             if not self.face_detector.face_detected:
-                self.face_detector.face_detected = self.face_detector.process_face_detection()
-                if self.face_detector.face_detected:
-                    self.set_particles_speed(self.particles_speed)
-                else:
-                    self.set_particles_speed(0)
+                self.handle_face_detection()
 
-            if len(self.particles) < self.number_of_particles:
+            if self.should_create_particle():
                 self.create_particle()
                 self.create_particle()
                 self.create_particle()
@@ -402,15 +426,9 @@ class ParticleSimulation:
                 self.wave_movement = not self.face_detector.face_detected
 
             self.draw_particles()
-
             pygame.display.update()
 
-        pygame.quit()
-        self.face_detector.cap.release()
-        exit()
-
-    def config_text_animation(self, screen_width, screen_height, text_pos):
-        self.text_animation = TextAnimation(phrases[random.randint(0, len(phrases)-1)], screen_width, screen_height, text_pos)
+        self.finish_simulation()
 
 if __name__ == "__main__":
     simulation = ParticleSimulation()
