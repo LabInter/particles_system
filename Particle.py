@@ -45,21 +45,16 @@ class Particle:
                        self.collisions_count += 1
                        return Particle(self.pos, self.dir, 1, 1, (255,255,0), False, False)
     
-    def guidance(self, box, particles, use_collision):
+    def guidance(self, particles, use_collision):
         if self.alive: 
-            self.boundary_update_dir(box)
             if self.collidable:
                 return self.check_collision(use_collision, particles)
 
     def boundary_update_dir(self, box):
-        if self.alive:  
-            if self.pos.x <= box[0] + self.radius and self.dir.x < 0:
+        if self.alive:
+            if not (box[0] + self.radius <= self.pos.x <= box[1] - self.radius):
                 self.dir.x *= -1
-            elif self.pos.x >= box[1] - self.radius and self.dir.x > 0:
-                self.dir.x *= -1
-            if self.pos.y <= box[2] + self.radius and self.dir.y < 0:
-                self.dir.y *= -1
-            elif self.pos.y >= box[3] - self.radius and self.dir.y > 0:
+            if not (box[2] + self.radius <= self.pos.y <= box[3] - self.radius):
                 self.dir.y *= -1
     
     def increase_size(self):
