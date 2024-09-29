@@ -54,10 +54,6 @@ class Particle:
                 self.dir.y *= -1
             elif self.pos.y >= box[3] - self.radius and self.dir.y > 0:
                 self.dir.y *= -1
-
-    # def handle_collision(self, particle):
-    #     if self.alive:
-    #         particle.remove_particle()
     
     def increase_size(self):
         self.radius += 5
