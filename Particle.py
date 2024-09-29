@@ -6,7 +6,7 @@ import random
 class Particle:
 
     __slots__ = [
-        'pos', 'angle', 'r', 'wave_speed', 'collision_status', 'original_pos', 'dir', 'speed', 'radius', 'use_image', 'alive', 'collidable',
+        'pos', 'r', 'original_pos', 'dir', 'speed', 'radius', 'use_image', 'alive', 'collidable',
         'image', 'color', 'collisions_count',
         'noise_offset_x', 'noise_offset_y', 'direction_x', 'direction_y', 'center_x', 'center_y'
     ]
@@ -20,14 +20,14 @@ class Particle:
         self.use_image = use_image
         self.alive = True
         self.collidable = collidable
-        self.angle = 0  # Ângulo para movimento de onda
+        # self.angle = 0  # Ângulo para movimento de onda
         self.r = 50  # Raio da onda
-        self.wave_speed = 0.05  # Velocidade do movimento da onda
+        # self.wave_speed = 0.05  # Velocidade do movimento da onda
         if use_image:
             self.image = pygame.transform.scale(color_or_image, (2 * radius, 2 * radius))
         else:
             self.color = color_or_image
-        self.collision_status = False
+        # self.collision_status = False
         self.collisions_count = 0
 
         self.noise_offset_x = 0
