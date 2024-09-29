@@ -59,7 +59,7 @@ class ParticleSimulation:
         points_x, points_y = self.generate_points()
         x_min, x_max = -10, 10
         y_min, y_max = -4, 4
-        self.points = self.transformar_pontos(points_x, points_y, x_min, x_max, y_min, y_max, self.WIDTH, self.HEIGHT)
+        self.points = self.transform_points(points_x, points_y, x_min, x_max, y_min, y_max, self.WIDTH, self.HEIGHT)
 
     def init_particles_from_collision_variables(self):
         self.particles_from_collision = []
@@ -147,8 +147,6 @@ class ParticleSimulation:
 
         should_restart = True
 
-        # sould_apply_noise = True
-
         for particle in self.particles_from_collision:
             if particle.alive:
                 particle.noise_offset_x += 0.01
@@ -164,10 +162,7 @@ class ParticleSimulation:
                 # Atualizar posição movendo para fora, com ruído perlin aplicado
                 particle.pos.x += (particle.direction_x + noise_dx) * particle.speed
                 particle.pos.y += (particle.direction_y + noise_dy) * particle.speed
-                # if sould_apply_noise:
-                # particle.dir = perlin_noise_direction(particle, self.timer)
-                # sould_apply_noise = not sould_apply_noise
-                # particle.pos += particle.dir * self.speed_particle_restart
+
                 should_restart = False
                 pygame.draw.circle(self.screen, particle.color, (particle.pos.x, particle.pos.y), particle.radius)
                 if particle.pos.x > self.WIDTH or particle.pos.x < 0 or particle.pos.y > self.HEIGHT or particle.pos.y < 0:
@@ -249,7 +244,7 @@ class ParticleSimulation:
         experiment.electron_beam(num_electrons=self.number_of_particles)
         return experiment.get_positions()
 
-    def transformar_pontos(self, pontos_x, pontos_y, x_min, x_max, y_min, y_max, screen_width, screen_height):
+    def transform_points(self, pontos_x, pontos_y, x_min, x_max, y_min, y_max, screen_width, screen_height):
         novos_pontos = []
         scale_x = screen_width - 10
         scale_y = screen_height - 10
@@ -288,7 +283,7 @@ class ParticleSimulation:
         for i in range(index_next_to_alive):
             particle = self.particles_from_collision[i]
             particle.update_pos()
-            particle.draw(self.screen)
+            self.draw_particle(particle)
 
     def create_generated_particles(self, result):
         self.to_alive_created_particle(result)
@@ -334,7 +329,9 @@ class ParticleSimulation:
                 update_wave_movement(self.timer, particle)
             else:
                 particle.update_pos()
-            particle.draw(self.screen)
+
+            self.draw_particle(particle)
+
             self.particles_manager.add_particle_to_grid(particle)
             i, j = self.particles_manager.get_particle_position_on_grid(particle)
             result = particle.guidance(self.box, self.particles_manager.grid[i][j], self.use_collision if self.face_detector.face_detected else False)
@@ -352,6 +349,13 @@ class ParticleSimulation:
                 x = particle.pos.x
                 y = particle.pos.y
                 self.to_alive_created_particle(Particle((x,y), particle.dir, 1, 1, (0,0,0), False, False))
+
+    def draw_particle(self, particle):
+          if particle.alive:
+            if particle.use_image:
+                self.screen.blit(particle.image, (particle.pos.x - particle.radius, particle.pos.y - particle.radius))
+            else:
+                pygame.draw.circle(self.screen, particle.color, (particle.pos.x, particle.pos.y), particle.radius)
 
     def create_particles(self):
         for _ in range(self.number_of_particles):

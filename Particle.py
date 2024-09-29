@@ -30,13 +30,6 @@ class Particle:
         self.center_x = 0
         self.center_y = 0
 
-    def draw(self, screen, ):
-        if self.alive:
-            if self.use_image:
-                screen.blit(self.image, (self.pos.x - self.radius, self.pos.y - self.radius))
-            else:
-                pygame.draw.circle(screen, self.color, (self.pos.x, self.pos.y), self.radius)
-
     def check_collision(self, use_collision, particles):
         if self.alive and self.collidable: 
             if use_collision:
