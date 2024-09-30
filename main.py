@@ -321,7 +321,7 @@ class ParticleSimulation:
     def handle_particle_collisions(self, particle):
         self.particles_manager.add_particle_to_grid(particle)
         i, j = self.particles_manager.get_particle_position_on_grid(particle)
-        result = particle.guidance(self.box, self.particles_manager.grid[i][j], self.use_collision if self.face_detector.face_detected else False)
+        result = particle.guidance(self.particles_manager.grid[i][j], self.use_collision if self.face_detector.face_detected else False)
         if self.should_create_generated_particles_from_collision(result):
             self.create_generated_particles(result)
 
