@@ -3,6 +3,15 @@ import math
 import pygame
 import random
 
+# Pré-calcular os vetores correspondentes a 10 ângulos entre 0 e 2 * PI
+ANGLE_COUNT = 10
+PRECOMPUTED_DIRECTIONS = []
+
+for i in range(ANGLE_COUNT):
+    angle = (2 * math.pi * i) / ANGLE_COUNT
+    direction = Vector2(math.cos(angle), math.sin(angle))
+    PRECOMPUTED_DIRECTIONS.append(direction)
+
 class Particle:
 
     __slots__ = [
@@ -66,13 +75,18 @@ class Particle:
         self.alive = False
 
     def is_collided(self, particle):
-        return self.alive and particle.alive and self.euclidean_distance(self.pos, particle.pos) <= self.radius + particle.radius
+        if self.alive and particle.alive:
+            distance_squared = (self.pos - particle.pos).length_squared()
+            radius_sum = self.radius + particle.radius
+            return distance_squared <= radius_sum ** 2
+        return False
 
     def update_pos(self):
-        if self.alive:
-            angle = random.uniform(0, 2 * math.pi)
-            self.dir = Vector2(math.cos(angle), math.sin(angle))
-            self.pos += self.dir * self.speed
+        if not self.alive:
+            return
+        
+        self.dir = random.choice(PRECOMPUTED_DIRECTIONS)
+        self.pos += self.dir * self.speed
     
     def update_pos_dla(self):
         if self.alive:
