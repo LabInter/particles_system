@@ -1,46 +1,7 @@
 import pygame
 import random
-import string
 
 class TextAnimation:
-
-    def split_phrase(self, phrase, max_width, letter_size):
-        words = phrase.split(' ')
-        lines = []
-        current_line = ""
-
-        for word in words:
-            if current_line:  # Se já houver texto na linha, adicione um espaço antes da palavra
-                test_line = current_line + " " + word
-            else:
-                test_line = word
-
-            if len(test_line) * letter_size > max_width:
-                lines.append(current_line.strip())
-                current_line = word
-            else:
-                current_line = test_line
-        
-        if current_line:
-            lines.append(current_line.strip())
-        
-        return lines
-
-    def calculate_final_positions(self, lines, start_x, start_y, letter_size, line_height):
-        self.positions = []
-        y = start_y
-        for line in lines:
-            x = start_x - (len(line) * letter_size) // 2
-            for char in line:
-                if char.strip():  # Verifica se o caractere não é um espaço vazio
-                    self.positions.append((char, (x, y)))
-                x += letter_size
-            y += line_height
-
-    def calculate_start_x_position(self, phrase, text_position, letter_size):
-        total_width = len(phrase) * letter_size
-        return text_position[0] - (total_width // 2)
-
     def __init__(self, phrase, screen_width, screen_height, text_position):
         self.phrase = phrase
         self.screen_width = screen_width
@@ -49,48 +10,144 @@ class TextAnimation:
         self.final_font_size = 20
         self.growth_duration = 300
         self.animation_velocity = 0.025
-        self.letter_size_px = self.final_font_size // 2
-        self.line_height_px = self.final_font_size
-        max_width = screen_width // 2
+        self.font_name = 'arial'
+        self.color = (255, 255, 255)
+        self.line_spacing = 1.2  # Multiplicador de espaçamento entre linhas
 
-        lines = self.split_phrase(phrase, max_width, self.letter_size_px)
-        self.calculate_final_positions(lines, text_position[0], text_position[1], self.letter_size_px, self.line_height_px)
+        # Inicializa a fonte com o tamanho final para obter medições precisas
+        self.final_font = pygame.font.SysFont(self.font_name, self.final_font_size)
 
-        # Verifica se a posição está vazia e se o caractere é válido antes de criar o GrowingLetter
-        self.letters = [GrowingLetter(letter, pos, self.initial_font_size, self.final_font_size, self.growth_duration, self.screen_width, self.screen_height) 
-                        for letter, pos in self.positions if letter.strip()]
+        # Define a largura máxima para a quebra de linha (ajustado)
+        max_line_width = self.screen_width // 2
+
+        # Divide a frase em linhas
+        self.lines = self.split_phrase(self.phrase, self.final_font, max_line_width)
+
+        # Calcula as posições finais
+        self.positions = self.calculate_final_positions(self.lines, text_position, self.final_font)
+
+        # Cria os sprites GrowingLetter
+        self.letters = pygame.sprite.Group()
+        for letter, pos in self.positions:
+            if letter.strip():
+                gl = GrowingLetter(letter, pos, self.initial_font_size, self.final_font_size,
+                                   self.growth_duration, self.screen_width, self.screen_height,
+                                   self.font_name, self.color)
+                self.letters.add(gl)
+
+    def split_phrase(self, phrase, font, max_width):
+        words = phrase.split(' ')
+        lines = []
+        current_line = ""
+
+        for word in words:
+            if current_line:
+                test_line = current_line + " " + word
+            else:
+                test_line = word
+
+            test_line_width, _ = font.size(test_line)
+            if test_line_width > max_width and current_line:
+                lines.append(current_line.strip())
+                current_line = word
+            elif test_line_width > max_width:
+                # A palavra individual é maior que o max_width, então a cortamos
+                split_word = self.split_long_word(word, font, max_width)
+                lines.extend(split_word[:-1])
+                current_line = split_word[-1]
+            else:
+                current_line = test_line
+
+        if current_line:
+            lines.append(current_line.strip())
+
+        return lines
+
+    def split_long_word(self, word, font, max_width):
+        chars = list(word)
+        current_part = ''
+        parts = []
+
+        for char in chars:
+            test_part = current_part + char
+            part_width, _ = font.size(test_part)
+            if part_width > max_width and current_part:
+                parts.append(current_part)
+                current_part = char
+            else:
+                current_part = test_part
+
+        if current_part:
+            parts.append(current_part)
+
+        return parts
+
+    def calculate_final_positions(self, lines, text_position, font):
+        positions = []
+        total_height = len(lines) * font.get_linesize() * self.line_spacing
+        start_y = text_position[1] - total_height // 2
+        y = start_y
+
+        for line in lines:
+            line_width, _ = font.size(line)
+            start_x = text_position[0] - line_width // 2
+            x = start_x
+            for char in line:
+                char_width, _ = font.size(char)
+                if char.strip():
+                    positions.append((char, (x + char_width // 2, y + font.get_linesize() // 2)))
+                x += char_width
+            y += font.get_linesize() * self.line_spacing
+
+        return positions
 
     def draw_and_update(self, screen):
-        for letter in self.letters:
-            letter.update(self.animation_velocity)
-            screen.blit(letter.image, letter.rect)
+        self.letters.update(self.animation_velocity)
+        self.letters.draw(screen)
 
-class GrowingLetter:
-    def __init__(self, letter, final_position, initial_font_size, final_font_size, growth_duration, screen_width, screen_height):
-        self.x = random.randint(0, screen_width)
-        self.y = random.randint(0, screen_height)
+class GrowingLetter(pygame.sprite.Sprite):
+    def __init__(self, letter, final_position, initial_font_size, final_font_size,
+                 growth_duration, screen_width, screen_height, font_name, color):
+        super().__init__()
         self.letter = letter
         self.final_x, self.final_y = final_position
         self.initial_font_size = initial_font_size
         self.final_font_size = final_font_size
-        self.font_size = initial_font_size
-        self.font = pygame.font.SysFont('arial', self.font_size)
-        self.image = self.font.render(self.letter, True, (255, 255, 255))
-        self.rect = self.image.get_rect(center=(self.x, self.y))
-        self.growth_counter = 0
         self.growth_duration = growth_duration
+        self.font_name = font_name
+        self.color = color
+
+        # Posição inicial aleatória
+        self.x = random.uniform(0, screen_width)
+        self.y = random.uniform(0, screen_height)
+
+        self.growth_counter = 0
+        self.font_size = self.initial_font_size
+        self.previous_font_size = 0
+        self.font = pygame.font.SysFont(self.font_name, int(self.font_size))
+        self.image = self.font.render(self.letter, True, self.color)
+        self.rect = self.image.get_rect(center=(self.x, self.y))
 
     def update(self, move_factor):
+        # Atualiza o tamanho da fonte
         if self.growth_counter < self.growth_duration:
             self.font_size = self.initial_font_size + (self.final_font_size - self.initial_font_size) * (self.growth_counter / self.growth_duration)
-            self.font = pygame.font.SysFont('arial', int(self.font_size))
-            self.image = self.font.render(self.letter, True, (255, 255, 255))
-            self.rect = self.image.get_rect(center=(self.x, self.y))
             self.growth_counter += 1
 
-        self.x = self.x + (self.final_x - self.x) * move_factor
-        self.y = self.y + (self.final_y - self.y) * move_factor
-        self.rect = self.image.get_rect(center=(self.x, self.y))
+            # Recria a fonte e a imagem apenas se o tamanho inteiro da fonte mudou
+            if int(self.font_size) != self.previous_font_size:
+                self.font = pygame.font.SysFont(self.font_name, int(self.font_size))
+                self.image = self.font.render(self.letter, True, self.color)
+                self.previous_font_size = int(self.font_size)
+                # Atualiza o rect com o novo tamanho da imagem
+                self.rect = self.image.get_rect(center=(self.x, self.y))
+
+        # Atualiza a posição
+        self.x += (self.final_x - self.x) * move_factor
+        self.y += (self.final_y - self.y) * move_factor
+        self.rect.center = (self.x, self.y)
+
+
 
 
 # # Inicialização do Pygame e da animação
