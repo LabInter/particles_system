@@ -53,6 +53,7 @@ class ParticleSimulation:
         self.move_particle_status = False
         self.restart_status = False
         self.particle_index_to_create_final_image = 0
+        self.move_particles_velocity = 0.01
 
     def init_background(self):
         self.bg = pygame.Surface((self.WIDTH, self.HEIGHT))
@@ -165,11 +166,13 @@ class ParticleSimulation:
         for particle in self.particles_from_collision:
             dx = (particle.original_pos.x - particle.pos.x)
             dy = (particle.original_pos.y - particle.pos.y)
-            particle.pos.x += dx * 0.01
-            particle.pos.y += dy * 0.01
+            particle.pos.x += dx * self.move_particles_velocity
+            particle.pos.y += dy * self.move_particles_velocity
             pygame.draw.circle(self.screen, particle.color, (particle.pos.x, particle.pos.y), particle.radius)
             if abs(dx) > 0.1 or abs(dy) > 0.1:
                 cont+=1
+
+        self.move_particles_velocity += 0.00001
         
         self.particle_index_to_create_final_image += self.removed_particles_incrementer
         self.removed_particles_incrementer += 2
@@ -242,7 +245,7 @@ class ParticleSimulation:
                         self.removed_particles.append(particle_generated)
 
         self.num_particles_from_collision = len(self.particles_from_collision)
-        self.factor_to_restart = self.num_particles_from_collision * 0.96
+        self.factor_to_restart = self.num_particles_from_collision * 0.80
         self.removed_particles_lenght = len(self.removed_particles)
         random.shuffle(self.removed_particles)
       
