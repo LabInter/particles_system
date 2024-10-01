@@ -1,6 +1,4 @@
-import pygame
 import math
-import random
 from Particle import *
 
 # Wave parameters
