@@ -4,7 +4,6 @@ import random
 from sys import exit
 
 import pygame
-import noise
 from PIL import Image
 from pygame.math import Vector2
 
@@ -140,7 +139,7 @@ class ParticleSimulation:
                 particle.noise_offset_y += 0.01
 
                 # Gerar deslocamento baseado em Perlin Noise
-                angle = noise.pnoise2(particle.noise_offset_x, particle.noise_offset_y) * 2 * math.pi
+                angle = math.sin(particle.noise_offset_x) * math.cos(particle.noise_offset_y) * 2 * math.pi
                 
                 # Desvio orgânico a partir do Perlin Noise
                 noise_dx = math.cos(angle) * 0.5  # Pequena variação no x
