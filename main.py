@@ -173,15 +173,16 @@ class ParticleSimulation:
                 cont+=1
 
         # if cont <= self.factor_to_add_excluded_particles:
+        
+        self.particle_index_to_create_final_image += self.removed_particles_incrementer
+        self.removed_particles_incrementer += 2
+
         if self.particle_index_to_create_final_image > self.removed_particles_lenght-1:
-            self.particle_index_to_create_final_image = self.removed_particles_lenght
-        else:
-            self.particle_index_to_create_final_image += self.removed_particles_incrementer
-            self.removed_particles_incrementer += 2
+            self.particle_index_to_create_final_image = self.removed_particles_lenght-1
+            self.removed_particles_incrementer = 0
 
         for i in range(self.particle_index_to_create_final_image):
             particle = self.removed_particles[i]
-            # print(f"{i}, pos: {particle.pos}, radius: {particle.radius}, color: {particle.color}")
             pygame.draw.circle(self.screen, particle.color, (particle.pos.x, particle.pos.y), particle.radius)
         
         if cont <= self.factor_to_restart:
