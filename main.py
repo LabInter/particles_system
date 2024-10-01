@@ -170,8 +170,6 @@ class ParticleSimulation:
             pygame.draw.circle(self.screen, particle.color, (particle.pos.x, particle.pos.y), particle.radius)
             if abs(dx) > 0.1 or abs(dy) > 0.1:
                 cont+=1
-
-        # if cont <= self.factor_to_add_excluded_particles:
         
         self.particle_index_to_create_final_image += self.removed_particles_incrementer
         self.removed_particles_incrementer += 2
@@ -196,7 +194,7 @@ class ParticleSimulation:
             for particle in self.particles_from_collision:
                 particle.noise_offset_x = random.uniform(0, 1000)
                 particle.noise_offset_y = random.uniform(0, 1000)
-                particle.speed = random.uniform(1, 3)
+                particle.speed = random.uniform(2.5, 3.5)
                 
                 # Vetor de direção com base na distância do centro
                 particle.center_x, particle.center_y = self.WIDTH / 2, self.HEIGHT / 2
@@ -244,8 +242,7 @@ class ParticleSimulation:
                         self.removed_particles.append(particle_generated)
 
         self.num_particles_from_collision = len(self.particles_from_collision)
-        self.factor_to_restart = self.num_particles_from_collision * 0.74
-        self.factor_to_add_excluded_particles = self.num_particles_from_collision * 0.9999
+        self.factor_to_restart = self.num_particles_from_collision * 0.96
         self.removed_particles_lenght = len(self.removed_particles)
         random.shuffle(self.removed_particles)
       
