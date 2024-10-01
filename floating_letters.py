@@ -2,7 +2,7 @@ import pygame
 import random
 
 class TextAnimation:
-    def __init__(self, phrase, screen_width, screen_height, text_position):
+    def __init__(self, phrase, screen_width, screen_height, image_bottom):
         self.phrase = phrase
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -24,7 +24,7 @@ class TextAnimation:
         self.lines = self.split_phrase(self.phrase, self.final_font, max_line_width)
 
         # Calcula as posições finais
-        self.positions = self.calculate_final_positions(self.lines, text_position, self.final_font)
+        self.positions = self.calculate_final_positions(self.lines, image_bottom, self.final_font)
 
         # Cria os sprites GrowingLetter
         self.letters = pygame.sprite.Group()
@@ -34,6 +34,7 @@ class TextAnimation:
                                    self.growth_duration, self.screen_width, self.screen_height,
                                    self.font_name, self.color)
                 self.letters.add(gl)
+
 
     def split_phrase(self, phrase, font, max_width):
         words = phrase.split(' ')
@@ -82,15 +83,26 @@ class TextAnimation:
 
         return parts
 
-    def calculate_final_positions(self, lines, text_position, font):
+    def calculate_final_positions(self, lines, image_bottom, font):
         positions = []
         total_height = len(lines) * font.get_linesize() * self.line_spacing
-        start_y = text_position[1] - total_height // 2
+
+        # Calcula o espaço disponível entre a imagem e o final da tela
+        available_space = self.screen_height - image_bottom
+
+        # Verifica se o texto cabe no espaço disponível
+        if total_height > available_space:
+            print("Aviso: O texto é muito alto e pode ser cortado.")
+            # Opcionalmente, você pode reduzir o tamanho da fonte aqui
+
+        # Calcula a posição inicial do texto para centralizar verticalmente no espaço disponível
+        start_y = image_bottom + (available_space - total_height) // 2
+
         y = start_y
 
         for line in lines:
             line_width, _ = font.size(line)
-            start_x = text_position[0] - line_width // 2
+            start_x = (self.screen_width - line_width) // 2  # Centraliza horizontalmente
             x = start_x
             for char in line:
                 char_width, _ = font.size(char)
@@ -100,6 +112,7 @@ class TextAnimation:
             y += font.get_linesize() * self.line_spacing
 
         return positions
+
 
     def draw_and_update(self, screen):
         self.letters.update(self.animation_velocity)

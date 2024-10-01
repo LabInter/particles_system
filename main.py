@@ -17,25 +17,6 @@ from phrases import *
 from wave_movement import *
 from face_detection import *
 
-class ImageTest:
-    def __init__(self, path, width, height):
-        self.path = path
-        self.width = width
-        self.height = height
-
-    @staticmethod
-    def get_list(WIDTH, HEIGHT):
-        image_test_1 = ImageTest("final_images/image19.jpg", WIDTH // 2, HEIGHT // 2)
-        image_test_2 = ImageTest("final_images/image23.jpg", WIDTH // 2, HEIGHT // 2)
-        image_test_3 = ImageTest("final_images/image17.jpg", WIDTH  - WIDTH // 3, HEIGHT // 2)
-        image_test_4 = ImageTest("final_images/image12.jpg", WIDTH - WIDTH // 2, HEIGHT - HEIGHT // 3)
-        image_test_5 = ImageTest("final_images/image24.jpg", WIDTH - WIDTH // 4, HEIGHT // 2)
-        image_test_6 = ImageTest("final_images/image21.jpg", WIDTH - WIDTH // 3, HEIGHT - HEIGHT // 2)  # COGUMELOS
-        image_test_7 = ImageTest("final_images/image7.png", WIDTH - WIDTH // 2, HEIGHT - HEIGHT // 2)
-        image_test_8 = ImageTest("final_images/image8.jpg", WIDTH - WIDTH // 2, HEIGHT - HEIGHT // 3)  # ESTÁTUA AFRICANA
-        image_test_9 = ImageTest("final_images/image20.jpg", WIDTH - WIDTH // 3, HEIGHT // 2)
-        return [image_test_1, image_test_2, image_test_3, image_test_4, image_test_5, image_test_6, image_test_7, image_test_8, image_test_9]
-
 class ParticleSimulation:
 
     def init_sound_variables(self):
@@ -64,12 +45,15 @@ class ParticleSimulation:
         self.points = self.transform_points(points_x, points_y, x_min, x_max, y_min, y_max, self.WIDTH, self.HEIGHT)
 
     def init_particles_from_collision_variables(self):
+        self.removed_particles = []
+        self.removed_particles_incrementer = 1
         self.particles_from_collision = []
         self.num_particles_from_collision = 0
         self.index_next_to_alive = 0
         self.last_activation_time = 0  # Timer para controlar a ativação das partículas
         self.move_particle_status = False
         self.restart_status = False
+        self.particle_index_to_create_final_image = 0
 
     def init_background(self):
         self.bg = pygame.Surface((self.WIDTH, self.HEIGHT))
@@ -86,7 +70,8 @@ class ParticleSimulation:
         self.timer = 0
 
     def choise_final_image(self):
-        self.image_test = random.choice(self.images_test_list)
+        random_image = random.choice(self.images_paths)
+        self.final_image_path = os.path.join('final_images/', random_image)
 
     def config_text_animation(self, screen_width, screen_height, text_pos):
         self.text_animation = TextAnimation(phrases[random.randint(0, len(phrases)-1)], screen_width, screen_height, text_pos)
@@ -100,9 +85,9 @@ class ParticleSimulation:
         self.init_restart_transition_variables()
         self.init_timer()
         self.choise_final_image()
-        self.create_final_image(self.image_test)
+        self.create_final_image(self.final_image_path)
         self.half = len(self.particles_from_collision)//15
-        self.config_text_animation(self.WIDTH, self.HEIGHT, (self.WIDTH//2, (self.HEIGHT - self.image_test.height//2)+self.image_test.height//4))
+        self.config_text_animation(self.WIDTH, self.HEIGHT, self.image_bottom)
         self.clock = pygame.time.Clock()
         self.init_double_slit_points()
         self.init_background()
@@ -130,9 +115,6 @@ class ParticleSimulation:
         self.face_detector = FaceDetection()
         self.face_detector.config_camera(self.WIDTH, self.HEIGHT)
 
-    def create_images_for_test(self):
-        self.images_test_list = ImageTest.get_list(self.WIDTH, self.HEIGHT)
-
     def create_particles_manager(self):
         self.particles_manager = ParticlesManager(self.WIDTH, self.HEIGHT, 15)
 
@@ -141,9 +123,9 @@ class ParticleSimulation:
         self.create_screen()
         self.create_osc_client()
         self.create_face_detector()
-        self.create_images_for_test()
         self.create_particles_manager()
         self.generate_images()
+        self.get_image_paths()
         self.init_variables()
 
     def move_particles_restart(self):
@@ -189,14 +171,27 @@ class ParticleSimulation:
             pygame.draw.circle(self.screen, particle.color, (particle.pos.x, particle.pos.y), particle.radius)
             if abs(dx) > 0.1 or abs(dy) > 0.1:
                 cont+=1
+
+        # if cont <= self.factor_to_add_excluded_particles:
+        if self.particle_index_to_create_final_image > self.removed_particles_lenght-1:
+            self.particle_index_to_create_final_image = self.removed_particles_lenght
+        else:
+            self.particle_index_to_create_final_image += self.removed_particles_incrementer
+            self.removed_particles_incrementer += 2
+
+        for i in range(self.particle_index_to_create_final_image):
+            particle = self.removed_particles[i]
+            # print(f"{i}, pos: {particle.pos}, radius: {particle.radius}, color: {particle.color}")
+            pygame.draw.circle(self.screen, particle.color, (particle.pos.x, particle.pos.y), particle.radius)
         
-        if cont <= len(self.particles_from_collision) * 0.84:
+        if cont <= self.factor_to_restart:
             self.restart_status = True
             # Remove 30% das partículas aleatoriamente
             num_to_remove = int(len(self.particles_from_collision) * 0.30)
             particles_to_remove = random.sample(self.particles_from_collision, num_to_remove)
             for particle in particles_to_remove:
-                self.particles_from_collision.remove(particle)
+                particle.alive = False
+                # self.particles_from_collision.remove(particle)
 
             for particle in self.particles_from_collision:
                 particle.noise_offset_x = random.uniform(0, 1000)
@@ -209,25 +204,51 @@ class ParticleSimulation:
                 particle.direction_x = math.cos(direction_angle)
                 particle.direction_y = math.sin(direction_angle)
 
+    def get_image_paths(self):
+        folder = 'final_images/'
+        extensions = ('.png', '.jpg', '.jpeg')
+        self.images_paths = [f for f in os.listdir(folder) if f.lower().endswith(extensions)]
+
             
-    def create_final_image(self, image_test):
-        image = Image.open(image_test.path)
-        image = image.resize((image_test.width,image_test.height), Image.Resampling.LANCZOS)
+    def create_final_image(self, final_image_path):
+        image = Image.open(final_image_path)
+        self.image = image
+
+        image = image.resize((self.WIDTH//2,self.HEIGHT//2), Image.Resampling.LANCZOS)
         image_data = image.load()
-        self.num_particles_from_collision = image.width * image.height
+
+        # Calcula a posição superior da imagem para centralizá-la na tela
+        image_x = (self.WIDTH - image.width) // 2
+        image_y = (self.HEIGHT - image.height) // 2
+
+        # Calcula a posição inferior da imagem
+        image_bottom = image_y + image.height
+
+        # Armazena as posições para uso posterior
+        self.image_bottom = image_bottom
 
         offset_x = (self.WIDTH - image.width) // 2
         offset_y = (self.HEIGHT - image.height) // 2
         for i in range(image.width):
             for j in range(image.height):
                 color = image_data[i,j]
-                r = random.randint(0,1)
-                r2 = random.randint(0,1)
-                if r == 1 and r2 == 1 and color != (0,0,0):
+                if color != (0,0,0):
                     position = (i + offset_x, j + offset_y)
                     particle_generated = Particle(position, Vector2(0,0), 1, 1, color, False, False)
                     particle_generated.alive = False
-                    self.particles_from_collision.append(particle_generated)                
+                    r = random.randint(0,1)
+                    r2 = random.randint(0,1)
+                    if r == 1 and r2 == 1:
+                        self.particles_from_collision.append(particle_generated)
+                    else:
+                        self.removed_particles.append(particle_generated)
+
+        self.num_particles_from_collision = len(self.particles_from_collision)
+        self.factor_to_restart = self.num_particles_from_collision * 0.74
+        self.factor_to_add_excluded_particles = self.num_particles_from_collision * 0.9999
+        self.removed_particles_lenght = len(self.removed_particles)
+        random.shuffle(self.removed_particles)
+      
 
     def generate_images(self):
         self.images = []
@@ -304,7 +325,7 @@ class ParticleSimulation:
         self.to_alive_created_particle(result)
 
     def to_alive_created_particle(self, result):
-        if self.index_next_to_alive < len(self.particles_from_collision):
+        if self.index_next_to_alive < self.num_particles_from_collision:
             self.particles_from_collision[self.index_next_to_alive].pos = result.pos
             self.particles_from_collision[self.index_next_to_alive].dir = result.dir
             self.particles_from_collision[self.index_next_to_alive].speed = result.speed
@@ -410,6 +431,8 @@ class ParticleSimulation:
 
     def render(self):
         while self.running:
+
+            dt = self.clock.tick(15) / 1000
 
             self.handle_keyboard_events()
 
