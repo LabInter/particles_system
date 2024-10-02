@@ -20,8 +20,8 @@ class ParticleSimulation:
 
     def init_sound_variables(self):
         self.peak_width_1 = 400
-        self.peak_width_2 = 394
-        self.bands = 146
+        self.peak_width_2 = 146
+        self.bands = 394
     
     def init_text_variables(self):
         self.text_animation = None
@@ -98,7 +98,7 @@ class ParticleSimulation:
         self.running = True
 
     def create_osc_client(self):
-        self.osc_client = OscClient("127.0.0.1", 7400)
+        self.osc_client = OscClient("192.168.0.115", 7400)
     
     def create_screen(self):
         pygame.display.set_caption("Particle Simulation")
@@ -129,7 +129,7 @@ class ParticleSimulation:
         self.init_variables()
 
     def move_particles_restart(self):
-        self.send_sound_params(400, 394, 146, self.speed_incrementer_particle_restart)
+        self.send_sound_params(400, 146, 394, self.speed_incrementer_particle_restart)
         self.speed_particle_restart += self.speed_incrementer_particle_restart
 
         should_restart = True

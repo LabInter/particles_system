@@ -2,7 +2,7 @@ from pythonosc import udp_client
 
 class OscClient:
 
-    def __init__(self, ip = "127.0.0.1", port = 7400):
+    def __init__(self, ip = "192.168.0.115", port = 7400):
         self.ip = ip
         self.port = port
         self.client = udp_client.SimpleUDPClient(self.ip, self.port)
