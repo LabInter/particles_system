@@ -175,7 +175,7 @@ class ParticleSimulation:
         self.move_particles_velocity += 0.00002
         
         self.particle_index_to_create_final_image += self.removed_particles_incrementer
-        self.removed_particles_incrementer += 2
+        self.removed_particles_incrementer += 1
 
         if self.particle_index_to_create_final_image > self.removed_particles_lenght-1:
             self.particle_index_to_create_final_image = self.removed_particles_lenght-1
