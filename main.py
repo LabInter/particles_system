@@ -172,7 +172,7 @@ class ParticleSimulation:
             if abs(dx) > 0.1 or abs(dy) > 0.1:
                 cont+=1
 
-        self.move_particles_velocity += 0.00003
+        self.move_particles_velocity += 0.00002
         
         self.particle_index_to_create_final_image += self.removed_particles_incrementer
         self.removed_particles_incrementer += 2
@@ -409,6 +409,7 @@ class ParticleSimulation:
     def handle_face_detection(self):
         self.face_detector.face_detected = self.face_detector.process_face_detection()
         if self.face_detector.face_detected:
+            self.wave_movement = False
             self.set_particles_speed(self.particles_speed)
         else:
             self.set_particles_speed(0)
@@ -438,7 +439,7 @@ class ParticleSimulation:
 
             self.screen.blit(self.bg, (0, 0))
 
-            if not self.face_detector.face_detected:
+            if self.wave_movement and not self.face_detector.face_detected:
                 self.handle_face_detection()
 
             if self.should_create_particle():
