@@ -446,6 +446,7 @@ class ParticleSimulation:
                 self.create_particle()
                 self.create_particle()
                 self.create_particle()
+                self.create_particle()
             else:
                 self.wave_movement = not self.face_detector.face_detected
 
