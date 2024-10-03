@@ -215,12 +215,12 @@ class ParticleSimulation:
         image = Image.open(final_image_path)
         self.image = image
 
-        image = image.resize((self.WIDTH//2,self.HEIGHT//2), Image.Resampling.LANCZOS)
+        image = image.resize((self.WIDTH - int(self.WIDTH * 0.3),self.HEIGHT - int(self.HEIGHT * 0.3)), Image.Resampling.LANCZOS)
         image_data = image.load()
 
         # Calcula a posição superior da imagem para centralizá-la na tela
         image_x = (self.WIDTH - image.width) // 2
-        image_y = (self.HEIGHT - image.height) // 2
+        image_y = ((self.HEIGHT - image.height) // 2)
 
         # Calcula a posição inferior da imagem
         image_bottom = image_y + image.height
@@ -229,7 +229,7 @@ class ParticleSimulation:
         self.image_bottom = image_bottom
 
         offset_x = (self.WIDTH - image.width) // 2
-        offset_y = (self.HEIGHT - image.height) // 2
+        offset_y = ((self.HEIGHT - image.height) // 2) // 2
         for i in range(image.width):
             for j in range(image.height):
                 color = image_data[i,j]
