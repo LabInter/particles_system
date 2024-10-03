@@ -71,7 +71,7 @@ class ParticleSimulation:
 
     def choise_final_image(self):
         random_image = random.choice(self.images_paths)
-        self.final_image_path = os.path.join('final_images/', random_image)
+        self.final_image_path = os.path.join('selected_images/', random_image)
 
     def config_text_animation(self, screen_width, screen_height, text_pos):
         self.text_animation = TextAnimation(phrases[random.randint(0, len(phrases)-1)], screen_width, screen_height, text_pos)
@@ -206,7 +206,7 @@ class ParticleSimulation:
                 particle.direction_y = math.sin(direction_angle)
 
     def get_image_paths(self):
-        folder = 'final_images/'
+        folder = 'selected_images/'
         extensions = ('.png', '.jpg', '.jpeg')
         self.images_paths = [f for f in os.listdir(folder) if f.lower().endswith(extensions)]
 
