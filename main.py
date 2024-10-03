@@ -98,7 +98,7 @@ class ParticleSimulation:
         self.running = True
 
     def create_osc_client(self):
-        self.osc_client = OscClient("192.168.0.115", 7400)
+        self.osc_client = OscClient("10.197.174.110", 7400)
     
     def create_screen(self):
         pygame.display.set_caption("Particle Simulation")
