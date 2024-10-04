@@ -62,7 +62,7 @@ class ParticleSimulation:
     def init_restart_transition_variables(self):
         self.speed_particle_restart = 2
         self.speed_incrementer_particle_restart = 0.01
-        self.time_transition_to_final_image = 13000
+        self.time_transition_to_final_image = 18000
         self.time_transition_to_final_image_counter = 0
         self.count_particles_to_restart = 0
     
@@ -76,8 +76,13 @@ class ParticleSimulation:
     def config_text_animation(self, screen_width, screen_height, text_pos):
         self.text_animation = TextAnimation(phrases[random.randint(0, len(phrases)-1)], screen_width, screen_height, text_pos)
 
-    def init_variables(self):
+    def init_face_detection_variables(self):
         self.face_detector.init_variables()
+        self.time_to_starts_face_detection = 3 #seconds
+        self.timer_to_starts_face_detection = 0
+
+    def init_variables(self):
+        self.init_face_detection_variables()
         self.init_text_variables()
         self.init_sound_variables()
         self.init_particles_variables()        
@@ -215,21 +220,23 @@ class ParticleSimulation:
         image = Image.open(final_image_path)
         self.image = image
 
-        image = image.resize((self.WIDTH - int(self.WIDTH * 0.3),self.HEIGHT - int(self.HEIGHT * 0.3)), Image.Resampling.LANCZOS)
+        image = image.resize((self.WIDTH - int(self.WIDTH * 0.15),self.HEIGHT - int(self.HEIGHT * 0.25)), Image.Resampling.LANCZOS)
         image_data = image.load()
 
         # Calcula a posição superior da imagem para centralizá-la na tela
-        image_x = (self.WIDTH - image.width) // 2
-        image_y = ((self.HEIGHT - image.height) // 2)
+        # image_x = (self.WIDTH - image.width) // 2
+        # image_y = ((self.HEIGHT - image.height) // 2) // 2
+
+        offset_x = (self.WIDTH - image.width) // 2
+        offset_y = ((self.HEIGHT - image.height) // 2) // 2
 
         # Calcula a posição inferior da imagem
-        image_bottom = image_y + image.height
+        image_bottom = offset_y + image.height
 
         # Armazena as posições para uso posterior
         self.image_bottom = image_bottom
 
-        offset_x = (self.WIDTH - image.width) // 2
-        offset_y = ((self.HEIGHT - image.height) // 2) // 2
+        
         for i in range(image.width):
             for j in range(image.height):
                 color = image_data[i,j]
@@ -315,6 +322,15 @@ class ParticleSimulation:
         self.to_alive_created_particle(result)
         x = random.uniform(result.pos.x - 20.0, result.pos.x + 20.0)
         y = random.uniform(result.pos.y - 20.0, result.pos.y + 20.0)
+        self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
+        x = random.uniform(result.pos.x - 20.0, result.pos.x + 20.0)
+        y = random.uniform(result.pos.y - 20.0, result.pos.y + 20.0)
+        self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
+        x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
+        y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
+        self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
+        x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
+        y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
         self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
         x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
         y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
@@ -439,7 +455,7 @@ class ParticleSimulation:
 
             self.screen.blit(self.bg, (0, 0))
 
-            if self.wave_movement and not self.face_detector.face_detected:
+            if self.wave_movement and not self.face_detector.face_detected and self.face_detector.face_detection_enabled:
                 self.handle_face_detection()
 
             if self.should_create_particle():
@@ -449,6 +465,10 @@ class ParticleSimulation:
                 self.create_particle()
             else:
                 self.wave_movement = not self.face_detector.face_detected
+                if not self.face_detector.face_detection_enabled:
+                    self.timer_to_starts_face_detection += dt
+                    if self.timer_to_starts_face_detection > self.time_to_starts_face_detection:
+                        self.face_detector.face_detection_enabled = True
 
             self.draw_particles()
             pygame.display.update()

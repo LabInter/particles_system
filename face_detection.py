@@ -5,6 +5,7 @@ class FaceDetection:
 
     def init_variables(self):
         self.face_detected = False
+        self.face_detection_enabled = False
 
     def __init__(self):
         self.init_variables()
@@ -16,7 +17,7 @@ class FaceDetection:
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, screen_width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, screen_height)
         mp_face_mesh = mp.solutions.face_mesh
-        self.face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, min_detection_confidence=0.5)
+        self.face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, min_detection_confidence=0.4)
 
     def process_face_detection(self):
         ret, camera_image = self.cap.read()
