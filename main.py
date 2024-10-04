@@ -103,7 +103,7 @@ class ParticleSimulation:
         self.running = True
 
     def create_osc_client(self):
-        self.osc_client = OscClient("10.197.174.110", 7400)
+        self.osc_client = OscClient("10.197.170.81", 7400)
     
     def create_screen(self):
         pygame.display.set_caption("Particle Simulation")
@@ -180,7 +180,7 @@ class ParticleSimulation:
         self.move_particles_velocity += 0.00002
         
         self.particle_index_to_create_final_image += self.removed_particles_incrementer
-        self.removed_particles_incrementer += 1
+        self.removed_particles_incrementer += 2
 
         if self.particle_index_to_create_final_image > self.removed_particles_lenght-1:
             self.particle_index_to_create_final_image = self.removed_particles_lenght-1
@@ -246,7 +246,8 @@ class ParticleSimulation:
                     particle_generated.alive = False
                     r = random.randint(0,1)
                     r2 = random.randint(0,1)
-                    if r == 1 and r2 == 1:
+                    r3 = random.randint(0,1)
+                    if r == 1 and r2 == 1 and r3 == 1:
                         self.particles_from_collision.append(particle_generated)
                     else:
                         self.removed_particles.append(particle_generated)
@@ -449,7 +450,7 @@ class ParticleSimulation:
     def render(self):
         while self.running:
 
-            dt = self.clock.tick(15) / 1000
+            dt = self.clock.tick(30) / 1000
 
             self.handle_keyboard_events()
 
