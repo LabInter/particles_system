@@ -18,7 +18,7 @@ class TextAnimation:
         self.final_font = pygame.font.SysFont(self.font_name, self.final_font_size)
 
         # Define a largura máxima para a quebra de linha (ajustado)
-        max_line_width = self.screen_width // 2
+        max_line_width = int(self.screen_width * 0.75)
 
         # Divide a frase em linhas
         self.lines = self.split_phrase(self.phrase, self.final_font, max_line_width)
