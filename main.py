@@ -241,7 +241,6 @@ class ParticleSimulation:
 
         # Armazena as posições para uso posterior
         self.image_bottom = image_bottom
-
         
         for i in range(image.width):
             for j in range(image.height):
@@ -252,7 +251,7 @@ class ParticleSimulation:
                     particle_generated.alive = False
                     r = random.randint(0,1)
                     r2 = random.randint(0,1)
-                    r3 = random.randint(0,1)
+                    r3 = random.choice([0,1,2])
                     if r == 1 and r2 == 1 and r3 == 1:
                         self.particles_from_collision.append(particle_generated)
                     else:
@@ -333,9 +332,9 @@ class ParticleSimulation:
         x = random.uniform(result.pos.x - 20.0, result.pos.x + 20.0)
         y = random.uniform(result.pos.y - 20.0, result.pos.y + 20.0)
         self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
-        x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
-        y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
-        self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
+        # x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
+        # y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
+        # self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
         x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
         y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
         self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
