@@ -478,7 +478,7 @@ class ParticleSimulation:
                         self.face_detector.face_detection_enabled = True
 
             self.draw_particles()
-            pygame.display.update()
+            pygame.display.flip()
 
         self.finish_simulation()
 
