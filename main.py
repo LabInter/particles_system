@@ -3,6 +3,10 @@ import math
 import random
 from sys import exit
 
+import gc
+gc.disable()
+
+
 import pygame
 from PIL import Image
 from pygame.math import Vector2
@@ -99,6 +103,8 @@ class ParticleSimulation:
     
         if self.use_image:
             self.number_of_particles = len(self.images)
+
+        gc.collect()
         
         self.running = True
 
