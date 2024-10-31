@@ -3,6 +3,12 @@ import math
 import random
 from sys import exit
 
+import sys
+
+import gc
+gc.disable()
+
+
 import pygame
 from PIL import Image
 from pygame.math import Vector2
@@ -71,7 +77,7 @@ class ParticleSimulation:
 
     def choise_final_image(self):
         random_image = random.choice(self.images_paths)
-        self.final_image_path = os.path.join('selected_images/', random_image)
+        self.final_image_path = os.path.join(self.selected_images_folder, random_image)
 
     def config_text_animation(self, screen_width, screen_height, text_pos):
         self.text_animation = TextAnimation(phrases[random.randint(0, len(phrases)-1)], screen_width, screen_height, text_pos)
@@ -99,6 +105,8 @@ class ParticleSimulation:
     
         if self.use_image:
             self.number_of_particles = len(self.images)
+
+        gc.collect()
         
         self.running = True
 
@@ -125,6 +133,7 @@ class ParticleSimulation:
 
     def __init__(self):
         pygame.init()
+        self.selected_images_folder = self.get_resource_path('selected_images')
         self.create_screen()
         self.create_osc_client()
         self.create_face_detector()
@@ -211,7 +220,7 @@ class ParticleSimulation:
                 particle.direction_y = math.sin(direction_angle)
 
     def get_image_paths(self):
-        folder = 'selected_images/'
+        folder = self.selected_images_folder
         extensions = ('.png', '.jpg', '.jpeg')
         self.images_paths = [f for f in os.listdir(folder) if f.lower().endswith(extensions)]
 
@@ -235,7 +244,6 @@ class ParticleSimulation:
 
         # Armazena as posições para uso posterior
         self.image_bottom = image_bottom
-
         
         for i in range(image.width):
             for j in range(image.height):
@@ -246,7 +254,7 @@ class ParticleSimulation:
                     particle_generated.alive = False
                     r = random.randint(0,1)
                     r2 = random.randint(0,1)
-                    r3 = random.randint(0,1)
+                    r3 = random.choice([0,1,2])
                     if r == 1 and r2 == 1 and r3 == 1:
                         self.particles_from_collision.append(particle_generated)
                     else:
@@ -256,11 +264,31 @@ class ParticleSimulation:
         self.factor_to_restart = self.num_particles_from_collision * 0.80
         self.removed_particles_lenght = len(self.removed_particles)
         random.shuffle(self.removed_particles)
+
+
+    def get_resource_path(self, relative_path):
+        """Obter o caminho correto para os arquivos incluídos pelo PyInstaller."""
+        # Verifique se o script está rodando como executável
+        if getattr(sys, 'frozen', False):
+            # Executável PyInstaller
+            base_path = sys._MEIPASS
+        else:
+            # Ambiente de desenvolvimento
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
+
+    # Use get_resource_path para acessar output_images_resized
+    # output_images_path = get_resource_path("output_images_resized")
       
 
     def generate_images(self):
         self.images = []
-        path = "output_images_resized"
+        path = self.get_resource_path("output_images_resized")
+        # if '_MEIPASS2' in os.environ:
+        #     path = os.path.join(os.environ['_MEIPASS2'], path)
+        # fd = open(filename, 'rb')
+        # path = "output_images_resized"
         valid_images = [".jpg",".gif",".png",".tga"]
         for f in os.listdir(path):
             ext = os.path.splitext(f)[1]
@@ -327,9 +355,9 @@ class ParticleSimulation:
         x = random.uniform(result.pos.x - 20.0, result.pos.x + 20.0)
         y = random.uniform(result.pos.y - 20.0, result.pos.y + 20.0)
         self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
-        x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
-        y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
-        self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
+        # x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
+        # y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
+        # self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
         x = random.uniform(result.pos.x - 40.0, result.pos.x + 40.0)
         y = random.uniform(result.pos.y - 40.0, result.pos.y + 40.0)
         self.to_alive_created_particle(Particle((x,y), result.dir, 1, 1, (0,0,0), False, False))
@@ -472,7 +500,7 @@ class ParticleSimulation:
                         self.face_detector.face_detection_enabled = True
 
             self.draw_particles()
-            pygame.display.update()
+            pygame.display.flip()
 
         self.finish_simulation()
 

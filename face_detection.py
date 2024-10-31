@@ -13,7 +13,7 @@ class FaceDetection:
         self.cap = None
 
     def config_camera(self, screen_width, screen_height):
-        self.cap = cv2.VideoCapture(1)
+        self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, screen_width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, screen_height)
         mp_face_mesh = mp.solutions.face_mesh
