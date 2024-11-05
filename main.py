@@ -76,7 +76,17 @@ class ParticleSimulation:
         self.timer = 0
 
     def choise_final_image(self):
-        random_image = random.choice(self.images_paths)
+        if not hasattr(self, 'used_images'):
+            self.used_images = set()
+        
+        available_images = [img for img in self.images_paths if img not in self.used_images]
+        
+        if not available_images:
+            self.used_images.clear()  # Reset the set if all images have been used
+            available_images = self.images_paths[:]
+        
+        random_image = random.choice(available_images)
+        self.used_images.add(random_image)
         self.final_image_path = os.path.join(self.selected_images_folder, random_image)
 
     def config_text_animation(self, screen_width, screen_height, text_pos):
@@ -125,13 +135,23 @@ class ParticleSimulation:
         self.box = [0, WIDTH, 0, HEIGHT]
     
     def create_face_detector(self):
-        self.face_detector = FaceDetection()
+        self.face_detector = FaceDetection(self.camera_id)
         self.face_detector.config_camera(self.WIDTH, self.HEIGHT)
 
     def create_particles_manager(self):
         self.particles_manager = ParticlesManager(self.WIDTH, self.HEIGHT, 15)
 
+    def get_camera_id(self):
+        try:
+            camera_id = int(input("Enter camera ID (0 for default camera):"))
+        except ValueError:
+            print("Entrada inválida! Usando o ID de câmera padrão (0).")
+            camera_id = 0
+        return camera_id
+
     def __init__(self):
+        self.camera_id = self.get_camera_id()
+        
         pygame.init()
         self.selected_images_folder = self.get_resource_path('selected_images')
         self.create_screen()
@@ -254,7 +274,7 @@ class ParticleSimulation:
                     particle_generated.alive = False
                     r = random.randint(0,1)
                     r2 = random.randint(0,1)
-                    r3 = random.choice([0,1,2,3,4])
+                    r3 = random.choice([0,1,2,3])
                     if r == 1 and r2 == 1 and r3 == 1:
                         self.particles_from_collision.append(particle_generated)
                     else:
