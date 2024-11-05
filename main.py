@@ -8,7 +8,7 @@ import sys
 import gc
 gc.disable()
 
-
+import numpy as np
 import pygame
 from PIL import Image
 from pygame.math import Vector2
@@ -53,6 +53,14 @@ class ParticleSimulation:
         self.removed_particles = []
         self.removed_particles_incrementer = 1
         self.particles_from_collision = []
+        
+        self.positions = np.array([], dtype=np.float32)
+        self.original_positions = np.array([], dtype=np.float32)
+        self.colors = np.array([], dtype=np.uint8)
+
+        # Estados das partículas (vivas ou não)
+        # self.alive = np.zeros(len(self.positions), dtype=bool)
+
         self.num_particles_from_collision = 0
         self.index_next_to_alive = 0
         self.last_activation_time = 0  # Timer para controlar a ativação das partículas
@@ -116,8 +124,8 @@ class ParticleSimulation:
     def create_screen(self):
         pygame.display.set_caption("Particle Simulation")
         # self.screen = pygame.display.set_mode((2560,1080))
-        # self.screen = pygame.display.set_mode((1512,982))
-        self.screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode((1512,982))
+        # self.screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
         WIDTH, HEIGHT = pygame.display.get_surface().get_size()
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
@@ -177,14 +185,22 @@ class ParticleSimulation:
         self.restart_status = False
         cont = 0
 
-        for particle in self.particles_from_collision:
-            dx = (particle.original_pos.x - particle.pos.x)
-            dy = (particle.original_pos.y - particle.pos.y)
-            particle.pos.x += dx * self.move_particles_velocity
-            particle.pos.y += dy * self.move_particles_velocity
-            pygame.draw.circle(self.screen, particle.color, (particle.pos.x, particle.pos.y), particle.radius)
-            if abs(dx) > 0.1 or abs(dy) > 0.1:
-                cont+=1
+       # Calcula delta (dx, dy) para todas as partículas
+        delta = self.original_positions - self.positions
+
+        # Atualiza as posições com base no delta e na velocidade
+        self.positions += delta * self.move_particles_velocity
+
+        # Desenha as partículas vivas
+        alive_indices = np.where(self.alive)[0]
+        for idx in alive_indices:
+            x, y = self.positions[idx]
+            color = self.colors[idx]
+            pygame.draw.circle(self.screen, color, (int(x), int(y)), 1)
+
+        # Calcula quantas partículas ainda estão se movendo
+        delta_magnitude = np.hypot(delta[:, 0], delta[:, 1])
+        cont = np.count_nonzero(delta_magnitude > 0.1)
 
         self.move_particles_velocity += 0.00002
         
@@ -244,6 +260,11 @@ class ParticleSimulation:
 
         # Armazena as posições para uso posterior
         self.image_bottom = image_bottom
+
+        # Listas temporárias para armazenar os dados das partículas
+        positions = []
+        original_positions = []
+        colors = []
         
         for i in range(image.width):
             for j in range(image.height):
@@ -257,11 +278,21 @@ class ParticleSimulation:
                     r3 = random.choice([0,1,2])
                     if r == 1 and r2 == 1 and r3 == 1:
                         self.particles_from_collision.append(particle_generated)
+                        positions.append(position)
+                        original_positions.append(position)
+                        colors.append(color)
                     else:
                         self.removed_particles.append(particle_generated)
 
-        self.num_particles_from_collision = len(self.particles_from_collision)
-        self.factor_to_restart = self.num_particles_from_collision * 0.80
+        self.positions = np.array(positions, dtype=np.float32)
+        self.original_positions = np.array(original_positions, dtype=np.float32)
+        self.colors = np.array(colors, dtype=np.uint8)
+
+        # Estados das partículas (vivas ou não)
+        self.alive = np.zeros(len(self.positions), dtype=bool)
+
+        self.num_particles_from_collision = len(self.positions)
+        self.factor_to_restart = self.num_particles_from_collision * 0.95
         self.removed_particles_lenght = len(self.removed_particles)
         random.shuffle(self.removed_particles)
 
@@ -376,10 +407,15 @@ class ParticleSimulation:
             self.particles_from_collision[self.index_next_to_alive].speed = result.speed
             self.particles_from_collision[self.index_next_to_alive].radius = result.radius
             self.particles_from_collision[self.index_next_to_alive].alive = True
+
+            idx = self.index_next_to_alive
+            self.positions[idx] = result.pos
+            self.alive[idx] = True
             self.index_next_to_alive += 1
         else:
             self.move_particle_status = True
             self.use_collision = False
+
 
     def should_create_generated_particles_from_collision(self, result):
         return result != None and not self.move_particle_status
