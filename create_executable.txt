@@ -5,5 +5,5 @@ pyinstaller --onefile main.py
 pyinstaller --onefile --add-data "/Users/danielseitenfus/Documents/GitHub/dbseitenfus/particles_system/myvenv/lib/python3.12/site-packages/mediapipe:mediapipe/" main.py
 
 
-pyinstaller --onefile  --add-data "/Users/danielseitenfus/Documents/GitHub/dbseitenfus/particles_system/selected_images:selected_images/"  --add-data "/Users/danielseitenfus/Documents/GitHub/dbseitenfus/particles_system/final_images:final_images/" --add-data "/Users/danielseitenfus/Documents/GitHub/dbseitenfus/particles_system/output_images_resized:output_images_resized/" --add-data "/Users/danielseitenfus/Documents/GitHub/dbseitenfus/particles_system/myvenv/lib/python3.12/site-packages/mediapipe:mediapipe/" main.py
+pyinstaller --onefile --add-data "arial.ttf:." --add-data "selected_images:selected_images/" --add-data "final_images:final_images/" --add-data "/Users/danielseitenfus/Documents/GitHub/dbseitenfus/particles_system/output_images_resized:output_images_resized/" --add-data "/Users/danielseitenfus/Documents/GitHub/dbseitenfus/particles_system/myvenv/lib/python3.12/site-packages/mediapipe:mediapipe/" main.py
 
