@@ -1,5 +1,7 @@
 import pygame
 import random
+import os
+import sys
 
 class TextAnimation:
     def __init__(self, phrase, screen_width, screen_height, image_bottom):
@@ -10,12 +12,15 @@ class TextAnimation:
         self.final_font_size = 20
         self.growth_duration = 300
         self.animation_velocity = 0.025
-        self.font_name = 'arial'
+
         self.color = (255, 255, 255)
         self.line_spacing = 1.2  # Multiplicador de espaçamento entre linhas
 
+        self.font_path = self.get_resource_path("fonts/Arial.ttf")
+        self.final_font = pygame.font.Font(self.font_path, self.final_font_size)
+
         # Inicializa a fonte com o tamanho final para obter medições precisas
-        self.final_font = pygame.font.SysFont(self.font_name, self.final_font_size)
+        # self.final_font = pygame.font.SysFont(self.font_name, self.final_font_size)
 
         # Define a largura máxima para a quebra de linha (ajustado)
         max_line_width = int(self.screen_width * 0.75)
@@ -32,9 +37,20 @@ class TextAnimation:
             if letter.strip():
                 gl = GrowingLetter(letter, pos, self.initial_font_size, self.final_font_size,
                                    self.growth_duration, self.screen_width, self.screen_height,
-                                   self.font_name, self.color)
+                                   self.font_path, self.color)
                 self.letters.add(gl)
 
+    # Função para obter o caminho correto da fonte
+    def get_resource_path(self, relative_path):
+        """Obter o caminho correto para os arquivos incluídos pelo PyInstaller."""
+        if getattr(sys, 'frozen', False):
+            # Diretório do executável no modo PyInstaller
+            base_path = os.path.dirname(sys.executable)
+        else:
+            # Ambiente de desenvolvimento
+            base_path = os.path.abspath(".")
+        
+        return os.path.join(base_path, relative_path)
 
     def split_phrase(self, phrase, font, max_width):
         words = phrase.split(' ')
@@ -120,14 +136,14 @@ class TextAnimation:
 
 class GrowingLetter(pygame.sprite.Sprite):
     def __init__(self, letter, final_position, initial_font_size, final_font_size,
-                 growth_duration, screen_width, screen_height, font_name, color):
+                 growth_duration, screen_width, screen_height, font_path, color):
         super().__init__()
         self.letter = letter
         self.final_x, self.final_y = final_position
         self.initial_font_size = initial_font_size
         self.final_font_size = final_font_size
         self.growth_duration = growth_duration
-        self.font_name = font_name
+        self.font_path = font_path
         self.color = color
 
         # Posição inicial aleatória
@@ -137,7 +153,7 @@ class GrowingLetter(pygame.sprite.Sprite):
         self.growth_counter = 0
         self.font_size = self.initial_font_size
         self.previous_font_size = 0
-        self.font = pygame.font.SysFont(self.font_name, int(self.font_size))
+        self.font = pygame.font.Font(self.font_path, int(self.font_size))
         self.image = self.font.render(self.letter, True, self.color)
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
@@ -149,7 +165,7 @@ class GrowingLetter(pygame.sprite.Sprite):
 
             # Recria a fonte e a imagem apenas se o tamanho inteiro da fonte mudou
             if int(self.font_size) != self.previous_font_size:
-                self.font = pygame.font.SysFont(self.font_name, int(self.font_size))
+                self.font = pygame.font.Font(self.font_path, int(self.font_size))
                 self.image = self.font.render(self.letter, True, self.color)
                 self.previous_font_size = int(self.font_size)
                 # Atualiza o rect com o novo tamanho da imagem
