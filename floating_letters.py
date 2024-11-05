@@ -16,7 +16,7 @@ class TextAnimation:
         self.color = (255, 255, 255)
         self.line_spacing = 1.2  # Multiplicador de espaçamento entre linhas
 
-        self.font_path = self.get_resource_path("fonts/Arial.ttf")
+        self.font_path = self.get_resource_path("arial.ttf")
         self.final_font = pygame.font.Font(self.font_path, self.final_font_size)
 
         # Inicializa a fonte com o tamanho final para obter medições precisas
