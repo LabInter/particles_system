@@ -7,13 +7,14 @@ class FaceDetection:
         self.face_detected = False
         self.face_detection_enabled = False
 
-    def __init__(self):
+    def __init__(self, camera_id):
         self.init_variables()
+        self.camera_id = camera_id
         self.face_mesh = None
         self.cap = None
 
     def config_camera(self, screen_width, screen_height):
-        self.cap = cv2.VideoCapture(1)
+        self.cap = cv2.VideoCapture(self.camera_id)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, screen_width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, screen_height)
         mp_face_mesh = mp.solutions.face_mesh
