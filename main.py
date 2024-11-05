@@ -186,10 +186,10 @@ class ParticleSimulation:
             if abs(dx) > 0.1 or abs(dy) > 0.1:
                 cont+=1
 
-        self.move_particles_velocity += 0.00002
+        self.move_particles_velocity += 0.000025
         
         self.particle_index_to_create_final_image += self.removed_particles_incrementer
-        self.removed_particles_incrementer += 2
+        self.removed_particles_incrementer += 3
 
         if self.particle_index_to_create_final_image > self.removed_particles_lenght-1:
             self.particle_index_to_create_final_image = self.removed_particles_lenght-1
@@ -254,14 +254,14 @@ class ParticleSimulation:
                     particle_generated.alive = False
                     r = random.randint(0,1)
                     r2 = random.randint(0,1)
-                    r3 = random.choice([0,1,2])
+                    r3 = random.choice([0,1,2,3,4])
                     if r == 1 and r2 == 1 and r3 == 1:
                         self.particles_from_collision.append(particle_generated)
                     else:
                         self.removed_particles.append(particle_generated)
 
         self.num_particles_from_collision = len(self.particles_from_collision)
-        self.factor_to_restart = self.num_particles_from_collision * 0.80
+        self.factor_to_restart = self.num_particles_from_collision * 0.99
         self.removed_particles_lenght = len(self.removed_particles)
         random.shuffle(self.removed_particles)
 
